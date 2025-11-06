@@ -140,19 +140,57 @@ L'application sera accessible à l'adresse `http://localhost:8000`.
 
 ### Routes
 
-#### Routes publiques (accessibles sans authentification)
+#### Routes Web (Blade)
 
+**Routes publiques (accessibles sans authentification)**
 - `GET /` : Redirige vers la liste des articles
 - `GET /posts` : Liste paginée des articles
 - `GET /posts/{post}` : Affichage d'un article
 
-#### Routes protégées (nécessitent l'authentification)
-
+**Routes protégées (nécessitent l'authentification)**
 - `GET /posts/create` : Formulaire de création
 - `POST /posts` : Création d'un article
 - `GET /posts/{post}/edit` : Formulaire d'édition (vérifie également la policy)
 - `PUT /posts/{post}` : Mise à jour d'un article (vérifie également la policy)
 - `DELETE /posts/{post}` : Suppression d'un article (vérifie également la policy)
+
+Les routes sont définies avec `Route::resource()` avec middleware `auth` et `except(['index', 'show'])` pour les routes publiques.
+
+#### Routes API (JSON avec Sanctum)
+
+**Routes publiques (accessibles sans authentification)**
+- `GET /api/posts` : Liste paginée des articles (retourne JSON)
+- `GET /api/posts/{post}` : Détail d'un article (retourne JSON)
+
+**Routes protégées (nécessitent un token Sanctum)**
+- `POST /api/posts` : Création d'un article (nécessite `Authorization: Bearer {token}`)
+- `PUT /api/posts/{post}` : Mise à jour d'un article (nécessite token + vérifie la policy)
+- `DELETE /api/posts/{post}` : Suppression d'un article (nécessite token + vérifie la policy)
+
+**Format des réponses API :**
+```json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Message optionnel"
+}
+```
+
+En cas d'erreur (validation, autorisation) :
+```json
+{
+  "success": false,
+  "errors": { ... },
+  "message": "Message d'erreur"
+}
+```
+
+**Codes HTTP :**
+- `200` : Succès (GET, PUT, DELETE)
+- `201` : Créé (POST)
+- `403` : Non autorisé (policy)
+- `404` : Non trouvé
+- `422` : Erreur de validation
 
 #### Routes d'authentification (Breeze)
 
@@ -238,14 +276,49 @@ php artisan optimize
 ### Base de données
 
 ```bash
+# Exécuter les migrations
+php artisan migrate
+
+# Exécuter les seeders (remplir la base avec des données de test)
+php artisan db:seed
+
+# Exécuter les migrations et seeders en une commande
+php artisan migrate --seed
+
+# Réinitialiser la base et exécuter les seeders
+php artisan migrate:fresh --seed
+
 # Créer un seeder
 php artisan make:seeder PostSeeder
 
-# Exécuter les seeders
-php artisan db:seed
-
 # Ouvrir Tinker (REPL Laravel)
 php artisan tinker
+```
+
+### Sanctum (API Authentication)
+
+```bash
+# Publier la configuration Sanctum (déjà fait)
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+
+# Exécuter les migrations Sanctum (déjà fait)
+php artisan migrate
+```
+
+**Pour obtenir un token API :**
+
+1. Créez un compte via `/register` ou connectez-vous via `/login`
+2. Utilisez Tinker pour créer un token :
+```bash
+php artisan tinker
+$user = User::find(1);
+$token = $user->createToken('api-token')->plainTextToken;
+echo $token;
+```
+
+3. Utilisez le token dans vos requêtes API :
+```bash
+curl -H "Authorization: Bearer {votre-token}" http://localhost:8000/api/posts
 ```
 
 ## Tests de l'authentification
@@ -282,19 +355,23 @@ Cliquez sur votre nom dans le menu déroulant en haut à droite, puis sur "Log O
 ✅ Authentification complète avec Laravel Breeze (Blade)  
 ✅ Modèle Post avec relations User  
 ✅ Migration pour la table posts  
-✅ Contrôleur PostController (resource)  
+✅ Contrôleur PostController (resource) pour les routes web  
+✅ Contrôleur API PostController pour les routes API  
 ✅ FormRequests pour la validation (StorePostRequest, UpdatePostRequest)  
 ✅ PostPolicy pour l'autorisation (seul l'auteur peut modifier/supprimer)  
-✅ Routes web protégées par middleware auth (except index/show)  
+✅ Routes web avec `Route::resource()` protégées par middleware auth (except index/show)  
+✅ Routes API RESTful avec Sanctum (publiques pour index/show, protégées pour create/update/delete)  
 ✅ Vues Blade avec pagination (index, show, create, edit)  
 ✅ Gestion des erreurs de validation dans les formulaires  
 ✅ Messages de succès après les actions  
-✅ Interface utilisateur moderne avec Tailwind CSS
+✅ Interface utilisateur moderne avec Tailwind CSS  
+✅ Réponses API JSON uniformes avec codes HTTP appropriés
 
 ## Technologies utilisées
 
 - **Framework** : Laravel 12
-- **Authentification** : Laravel Breeze (Blade + Tailwind CSS)
+- **Authentification Web** : Laravel Breeze (Blade + Tailwind CSS)
+- **Authentification API** : Laravel Sanctum (tokens)
 - **Base de données** : SQLite (par défaut, configurable)
 - **Frontend** : Blade Templates, Tailwind CSS, Vite
 - **Langage** : PHP 8.2+
@@ -305,7 +382,9 @@ Cliquez sur votre nom dans le menu déroulant en haut à droite, puis sur "Log O
 app/
 ├── Http/
 │   ├── Controllers/
-│   │   └── PostController.php
+│   │   ├── Api/
+│   │   │   └── PostController.php (nouveau - pour les routes API)
+│   │   └── PostController.php (pour les routes web)
 │   └── Requests/
 │       ├── StorePostRequest.php
 │       └── UpdatePostRequest.php
@@ -330,7 +409,8 @@ resources/
         └── edit.blade.php (nouveau)
 
 routes/
-└── web.php (modifié : routes posts)
+├── api.php (nouveau - routes API avec Sanctum)
+└── web.php (modifié : routes posts avec Route::resource())
 
 README.md (mis à jour)
 ```
