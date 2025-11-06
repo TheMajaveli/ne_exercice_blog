@@ -62,10 +62,20 @@ Si vous utilisez SQLite (défaut), assurez-vous que le fichier `database/databas
 touch database/database.sqlite
 ```
 
-### 5. Exécuter les migrations
+### 5. Exécuter les migrations et seeders
 
 ```bash
+# Exécuter les migrations
 php artisan migrate
+
+# Remplir la base de données avec des données de test (5 utilisateurs et 25-50 posts)
+php artisan db:seed
+```
+
+Ou en une seule commande :
+
+```bash
+php artisan migrate --seed
 ```
 
 ### 6. Compiler les assets frontend
@@ -291,9 +301,29 @@ php artisan migrate:fresh --seed
 # Créer un seeder
 php artisan make:seeder PostSeeder
 
+# Créer une factory
+php artisan make:factory PostFactory
+
 # Ouvrir Tinker (REPL Laravel)
 php artisan tinker
 ```
+
+### Seeders et données de test
+
+Le projet inclut des seeders pour générer des données de test :
+
+- **DatabaseSeeder** : Crée 5 utilisateurs et appelle le PostSeeder
+- **PostSeeder** : Crée entre 5 et 10 posts aléatoires pour chaque utilisateur
+- **PostFactory** : Génère des posts avec :
+  - Titres aléatoires (3-8 mots)
+  - Contenu avec plusieurs paragraphes (3-8 paragraphes)
+  - 70% de posts publiés avec dates aléatoires (sur la dernière année)
+  - 30% de brouillons (published_at = null)
+
+**Résultat attendu après seeding :**
+- 5 utilisateurs
+- Entre 25 et 50 posts au total
+- Environ 70% des posts publiés, 30% en brouillon
 
 ### Sanctum (API Authentication)
 
@@ -365,7 +395,8 @@ Cliquez sur votre nom dans le menu déroulant en haut à droite, puis sur "Log O
 ✅ Gestion des erreurs de validation dans les formulaires  
 ✅ Messages de succès après les actions  
 ✅ Interface utilisateur moderne avec Tailwind CSS  
-✅ Réponses API JSON uniformes avec codes HTTP appropriés
+✅ Réponses API JSON uniformes avec codes HTTP appropriés  
+✅ Seeders et Factories pour générer des données de test (5 utilisateurs, 25-50 posts)
 
 ## Technologies utilisées
 
@@ -397,8 +428,15 @@ app/
     └── AppServiceProvider.php (modifié : enregistrement de la policy)
 
 database/
-└── migrations/
-    └── 2025_11_03_113553_create_posts_table.php (nouveau)
+├── factories/
+│   ├── PostFactory.php (nouveau - génération de posts aléatoires)
+│   └── UserFactory.php (fourni par Breeze)
+├── migrations/
+│   ├── 2025_11_03_113553_create_posts_table.php (nouveau)
+│   └── 2025_11_06_114646_create_personal_access_tokens_table.php (nouveau - Sanctum)
+└── seeders/
+    ├── DatabaseSeeder.php (modifié - crée 5 utilisateurs et appelle PostSeeder)
+    └── PostSeeder.php (nouveau - crée 5-10 posts par utilisateur)
 
 resources/
 └── views/
@@ -422,6 +460,8 @@ README.md (mis à jour)
 3. **Autorisation** : L'autorisation est vérifiée à la fois via le middleware `auth` et via les méthodes `authorize()` dans le contrôleur qui utilisent la PostPolicy.
 4. **Validation** : Toute la validation se fait dans les FormRequests, pas dans le contrôleur (séparation des responsabilités).
 5. **Sécurité** : Les routes mutatives (create, store, update, destroy) sont protégées par le middleware `auth`. La Policy garantit que seul l'auteur peut modifier/supprimer ses articles.
+6. **Seeders** : Utilisez `php artisan migrate:fresh --seed` pour réinitialiser la base et la remplir avec des données de test (5 utilisateurs et 25-50 posts aléatoires).
+7. **Modèles** : Le projet utilise uniquement les modèles `User` et `Post`. Les anciens modèles `Category` et `Article` ont été supprimés car non utilisés.
 
 ## Licence
 
