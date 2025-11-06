@@ -1,4 +1,4 @@
-# Mini Blog Laravel
+# Mini Blog Laravel - ESCEN N4
 
 Une application de blog minimaliste construite avec Laravel, incluant l'authentification via Laravel Breeze et la gestion complète des articles (posts) avec autorisation basée sur les politiques (Policies).
 
@@ -468,5 +468,6 @@ README.md (mis à jour)
 Le framework Laravel est open-source sous la licence [MIT](https://opensource.org/licenses/MIT).
 
 ## Auteur
+Apollinaire Junior Mabiala
 
 Projet développé dans le cadre d'un exercice Laravel - Next-U.
