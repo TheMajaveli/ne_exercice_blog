@@ -20,11 +20,13 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// Routes publiques pour les posts (index et show)
+// Route publique pour la liste des posts
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
 // Routes protégées pour créer, modifier et supprimer des posts
 Route::resource('posts', PostController::class)
     ->middleware(['auth'])
     ->except(['index', 'show']);
+
+// Route publique pour afficher un post (doit être après le resource pour éviter les conflits)
+Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
